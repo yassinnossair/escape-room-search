@@ -1,7 +1,6 @@
 # Escape Room+ — A Search Problem Formulation & Solution
 
-**CSEN 901 — Introduction to Artificial Intelligence**
-**Team:** Yassin Ayman Nossair (55-5618) · Ahmed Sameh Helmy (55-13686)
+
 
 This document explains everything about this project, from zero background.
 Read it top to bottom — each section builds on the one before it.
