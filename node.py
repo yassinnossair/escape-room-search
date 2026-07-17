@@ -5,6 +5,23 @@
 import problem
 
 
+class SearchResult:
+    """
+    Wraps a completed search's outcome: the goal node found (or
+    None if failure), plus the count of nodes expanded — our
+    Week 4 comparison metric.
+    """
+    def __init__(self, goal_node, nodes_expanded):
+        self.goal_node = goal_node
+        self.nodes_expanded = nodes_expanded
+
+    def __repr__(self):
+        if self.goal_node is None:
+            return f"SearchResult(FAILURE, nodes_expanded={self.nodes_expanded})"
+        return (f"SearchResult(cost={self.goal_node.path_cost}, "
+                f"nodes_expanded={self.nodes_expanded})")
+
+
 class Node:
     """
     A search tree node — a 5-tuple, per Lecture 2 Concept 3:
