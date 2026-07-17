@@ -37,7 +37,7 @@ def get_operators(state):
     operators = []
 
     # ---- OPERATOR 1: Move_d (one per door) ----
-    for d_name in D:                          # M1: d in D
+    for d_name in sorted(D):                        # M1: d in D
         door = world.DOORS[d_name]
         if r in door["Connects"]:             # M2: door touches current room
             if door["Lock"].issubset(I):       # M3: agent holds every required item
@@ -58,7 +58,7 @@ def get_operators(state):
                 operators.append((f"Move_{d_name}", new_state, cost))
 
     # ---- OPERATOR 2: PickUp_i (one per item) ----
-    for i_name in A:                          # P1: i in A
+    for i_name in sorted(A):                          # P1: i in A
         item = world.ITEMS[i_name]
         if item["Location"] == r:             # P2: item lies in current room
             I_new = frozenset(I | {i_name})

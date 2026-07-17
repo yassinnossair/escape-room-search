@@ -335,21 +335,22 @@ These two DO use a heuristic (Section 5) to guide their choices.
 
 We ran all six algorithms on our Facility-6 world (Section 2.3) and recorded two numbers for each: the **total cost** of the escape route found, and the **number of nodes expanded** (a measure of how much work the algorithm did — every time it had to stop and consider a node's next steps counts as one expansion).
 
+**A note on reproducibility:** our first attempt at these measurements gave inconsistent results between runs — the same algorithm sometimes returned different answers in different Python sessions. We tracked this down to Python's `set`/`frozenset` types having no guaranteed internal order (it's randomized per session, for security reasons unrelated to our code). Since our world contains two parallel doors between R3 and R6 with a big cost difference (`d4`, 10 minutes, vs `d9`, 3 minutes — see Section 2.4), any algorithm without a cost-based tiebreaker (BFS, DFS, IDS, Greedy) could arbitrarily pick either one. We fixed this by sorting door and item names alphabetically every time operators are generated (`sorted(D)` / `sorted(A)` in `problem.py`), making every result fully deterministic and repeatable. The table below was confirmed identical across two separate, freshly-started runs.
+
 | Algorithm | Path Cost Found | Nodes Expanded | Found the OPTIMAL Route? |
 |---|---|---|---|
-| BFS | 5 | 3 | No — found the *shortest*, not the *cheapest* |
-| DFS | 5 | (varies by run order) | No — got lucky here, not guaranteed |
-| UCS | **3** | 7 | **Yes** — guaranteed by design |
-| IDS | 5 | (matches BFS's route) | No — same reason as BFS |
-| Greedy (using H1) | 12 | — | No — ignored real cost, fell into an expensive trap |
-| Greedy (using H2) | 12 | — | No — same trap, heuristic quality doesn't fix Greedy's core flaw |
+| BFS | 12 | 5 | No — tied on hop-count with the cheap route, but picked the expensive parallel door |
+| DFS | 15 | 6 | No — dove deep down a different, even less efficient route |
+| UCS | **3** | 6 | **Yes** — guaranteed by design |
+| IDS | 12 | 4 | No — same shallow-first blind spot as BFS |
+| Greedy (using H1) | 12 | 3 | No — ignored real cost, fell into the expensive parallel door |
+| Greedy (using H2) | 12 | 3 | No — same trap; heuristic quality doesn't fix Greedy's core flaw |
 | A\* (using H1) | **3** | 5 | **Yes** |
 | A\* (using H2) | **3** | 4 | **Yes — and fewer nodes expanded than H1** |
 
 **What this table proves, in plain words:**
-- **BFS finds the SHORTEST path, not the CHEAPEST one.** In our world, the shortest route (2 door-crossings) costs 5 minutes, while a slightly longer-looking route (3 actions, including a pickup) actually only costs 3 minutes. BFS can't tell the difference — it only counts steps.
-- **UCS always finds the true cheapest route (cost 3)** — this is guaranteed by how it works, not luck.
-- **Greedy can be genuinely bad.** It got trapped into taking an expensive 10-minute door, because at the moment of choosing, both the cheap door and the expensive door LOOKED equally close to the exit (both had a heuristic guess of "0 more hops needed") — Greedy has no way to notice that one is actually far more expensive to cross.
+- **BFS/DFS/IDS/Greedy all confidently return cost 12 — a full 4× more expensive than the true best answer (3).** This is the clearest possible demonstration of why "blind" search (and even Greedy, which is "informed" but reckless) can't be trusted to find the cheapest solution: none of them actually compare cost, so none of them notice they're taking a 10-minute door when a 3-minute door was equally close by hop-count.
+- **UCS always finds the true cheapest route (cost 3)** — this is guaranteed by how it works (it always expands the currently-cheapest known path), not luck.
 - **A\* always finds the cheapest route (cost 3), no matter which heuristic it uses** — this is the mathematical guarantee that comes from our heuristics being "admissible" (Section 5.1).
 - **A\* with H2 does the SAME quality of work using LESS effort than A\* with H1** (4 node expansions vs 5) — this is a direct, measured proof that H2 really is a smarter heuristic than H1, exactly as we predicted in Section 5.3.
 
